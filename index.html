@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adicionar Filme</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f9;
+        }
+        form {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px;
+            font-weight: bold;
+        }
+        input, textarea, button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #007BFF;
+            color: white;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Adicionar Filme</h1>
+    <form id="addMovieForm">
+        <label for="title">Título</label>
+        <input type="text" id="title" name="title" placeholder="Digite o título do filme" required>
+        
+        <label for="description">Descrição</label>
+        <textarea id="description" name="description" rows="3" placeholder="Digite a descrição do filme" required></textarea>
+        
+        <label for="image_url">URL da Imagem</label>
+        <input type="text" id="image_url" name="image_url" placeholder="Digite o URL da imagem" required>
+        
+        <label for="trailer_url">URL do Trailer</label>
+        <input type="text" id="trailer_url" name="trailer_url" placeholder="Digite o URL do trailer" required>
+        
+        <button type="submit">Adicionar Filme</button>
+    </form>
+
+    <hr>
+
+    <button id="listMoviesButton">Listar Filmes</button>
+    <div id="moviesList"></div>
+
+    <script>
+        const form = document.getElementById('addMovieForm');
+        const listMoviesButton = document.getElementById('listMoviesButton');
+        const moviesList = document.getElementById('moviesList');
+
+        // Enviar um novo filme ao banco de dados
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const movieData = {
+                title: document.getElementById('title').value,
+                description: document.getElementById('description').value,
+                image_url: document.getElementById('image_url').value,
+                trailer_url: document.getElementById('trailer_url').value
+            };
+
+            try {
+                const response = await fetch('http://localhost:3000/add-movie', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(movieData)
+                });
+
+                if (response.ok) {
+                    alert('Filme adicionado com sucesso!');
+                    form.reset();
+                } else {
+                    alert('Erro ao adicionar filme.');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao conectar com o servidor.');
+            }
+        });
+
+        // Listar todos os filmes do banco de dados
+        listMoviesButton.addEventListener('click', async () => {
+            try {
+                const response = await fetch('http://localhost:3000/list-movies');
+                if (response.ok) {
+                    const movies = await response.json();
+                    displayMovies(movies);
+                } else {
+                    alert('Erro ao buscar filmes.');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao conectar com o servidor.');
+            }
+        });
+
+        // Função para exibir filmes no DOM
+        function displayMovies(movies) {
+            moviesList.innerHTML = ''; // Limpa a lista antes de exibir os filmes
+            if (movies.length === 0) {
+                moviesList.innerHTML = '<p>Nenhum filme encontrado.</p>';
+                return;
+            }
+
+            movies.forEach(movie => {
+                const movieItem = document.createElement('div');
+                movieItem.style.border = '1px solid #ccc';
+                movieItem.style.padding = '10px';
+                movieItem.style.margin = '10px 0';
+                movieItem.style.borderRadius = '4px';
+                movieItem.innerHTML = `
+                    <h2>${movie.title}</h2>
+                    <p><strong>Descrição:</strong> ${movie.description}</p>
+                    <p><strong>URL da Imagem:</strong> <a href="${movie.image_url}" target="_blank">${movie.image_url}</a></p>
+                    <p><strong>URL do Trailer:</strong> <a href="${movie.trailer_url}" target="_blank">${movie.trailer_url}</a></p>
+                `;
+                moviesList.appendChild(movieItem);
+            });
+        }
+    </script>
+</body>
